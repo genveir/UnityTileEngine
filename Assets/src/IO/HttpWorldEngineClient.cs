@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using UnityEngine;
 
 namespace Assets.src.IO
@@ -56,14 +57,23 @@ namespace Assets.src.IO
         public void SendCommand(CommandDto command)
         {
             var bytes = command.ToByteArray();
-            var content = new ByteArrayContent(bytes);
+            var base64 = Convert.ToBase64String(bytes);
+            var content = new CmdDto { command = base64 };
+            var json = JsonUtility.ToJson(content);
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = _httpClient.PostAsync("world/player/command", content).Result;
+            var response = _httpClient.PostAsync("world/player/command", httpContent).Result;
 
             if (!response.IsSuccessStatusCode)
             {
                 Debug.Log("Failed to send command");
             }
+        }
+
+        [Serializable]
+        public class CmdDto
+        {
+            public string command;
         }
 
         private IEnumerable<TileDto> Decode(byte[] tiles)
